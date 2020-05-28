@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/gofiber/fiber"
 	"github.com/gofiber/template/html"
-	errhandler "github.com/hendratommy/github.com/hendratommy/fiber-errhandler"
+	errhandler "github.com/hendratommy/fiber-errhandler"
 )
 
 var data = fiber.Map{

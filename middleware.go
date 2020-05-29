@@ -35,13 +35,14 @@ func handleJSON(c *fiber.Ctx, args ...interface{}) {
 
 	httpErr = NewHttpError(fiber.StatusInternalServerError, "Internal Server Error", nil)
 	if l > 0 {
-		arg := args[0]
-		if he, ok := arg.(HTTPError); ok {
+		if he, ok := args[0].(HTTPError); ok {
 			httpErr = he
-		} else if e, ok := arg.(error); ok {
-			httpErr = NewHttpError(fiber.StatusInternalServerError, e.Error(), nil)
-		} else if e, ok := arg.(string); ok {
-			httpErr = NewHttpError(fiber.StatusInternalServerError, e, nil)
+		} else if e, ok := args[0].(error); ok {
+			httpErr = NewHttpError(fiber.StatusInternalServerError, e.Error(), e.Error())
+		} else if s, ok := args[0].(string); ok {
+			httpErr = NewHttpError(fiber.StatusInternalServerError, s, s)
+		} else {
+			httpErr = NewHttpError(fiber.StatusInternalServerError, "Internal Server Error", args[0])
 		}
 	}
 
@@ -50,7 +51,7 @@ func handleJSON(c *fiber.Ctx, args ...interface{}) {
 	if httpErr.Data() != nil {
 		c.JSON(fiber.Map{
 			"message": httpErr.Message(),
-			"data":    httpErr.Data(),
+			"error":    httpErr.Data(),
 		})
 	} else {
 		c.JSON(fiber.Map{
@@ -76,6 +77,10 @@ func handleTemplate(c *fiber.Ctx, args ...interface{}) {
 			if l >= 2 {
 				if he, ok := args[1].(HTTPError); ok {
 					httpErr = he
+				} else if e, ok := args[1].(error); ok {
+					httpErr = NewHttpError(fiber.StatusInternalServerError, e.Error(), e)
+				} else if s, ok := args[1].(string); ok {
+					httpErr = NewHttpError(fiber.StatusInternalServerError, s, s)
 				} else {
 					httpErr = NewHttpError(fiber.StatusInternalServerError, "Internal Server Error", args[1])
 				}
@@ -83,6 +88,9 @@ func handleTemplate(c *fiber.Ctx, args ...interface{}) {
 		} else if he, ok := args[0].(HTTPError); ok {
 			view = strconv.Itoa(he.StatusCode())
 			httpErr = he
+		} else if e, ok := args[0].(error); ok {
+			httpErr = NewHttpError(fiber.StatusInternalServerError, e.Error(), e)
+			view = strconv.Itoa(httpErr.StatusCode())
 		}
 	}
 
@@ -101,6 +109,9 @@ func handlePlainText(c *fiber.Ctx, args ...interface{}) {
 			return
 		} else if he, ok := args[0].(HTTPError); ok {
 			c.Status(he.StatusCode()).SendString(he.Message())
+			return
+		} else if e, ok := args[0].(error); ok {
+			c.Status(fiber.StatusInternalServerError).SendString(e.Error())
 			return
 		}
 	}

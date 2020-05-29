@@ -12,7 +12,7 @@ type HTTPError interface {
 	// Error message
 	// Optional. Default: ""
 	Message() string
-	// Data to respond with or to bind to view.
+	// Data to respond with or to bind to views.
 	// Optional. Default: nil
 	Data() interface{}
 	Error() string

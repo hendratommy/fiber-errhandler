@@ -131,6 +131,7 @@ func getPreferedContentType(c *fiber.Ctx) (ct string) {
 			ct = header[:factorSign]
 			return
 		}
+		ct = header
 	} else {
 		// if 'Content-Type' is empty then use 'Accept'
 		header = strings.ToLower(c.Get(fiber.HeaderAccept))

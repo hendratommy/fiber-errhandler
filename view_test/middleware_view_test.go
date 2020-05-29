@@ -20,6 +20,13 @@ func newApp(useTemplate bool) *fiber.App {
 
 	app.Use(errhandler.New(errhandler.Config{
 		UseTemplate: useTemplate,
+		Handler: func(c *fiber.Ctx, err error, f func(...interface{})) {
+			if c.Path() == "/custom" {
+				f("custom", err)
+				return
+			}
+			f(err)
+		},
 	}))
 
 	app.Get("/user", func(c *fiber.Ctx) {
@@ -39,6 +46,9 @@ func newApp(useTemplate bool) *fiber.App {
 	})
 	app.Get("/panic", func(c *fiber.Ctx) {
 		panic("i'm panic")
+	})
+	app.Get("/custom", func(c *fiber.Ctx) {
+		c.Next(errors.New("bad thing happens"))
 	})
 
 	return app
@@ -82,7 +92,7 @@ func TestErrHandler_view_notemplate(t *testing.T) {
 	}
 
 	req = httptest.NewRequest("GET", "/400", nil)
-	req.Header.Set("Accept", browserAccept)
+	req.Header.Set("Accept", "application/xhtml+xml")
 	if resp, err := app.Test(req); err != nil {
 		assert.NoError(t, err)
 	} else {
@@ -158,6 +168,19 @@ func TestErrHandler_view_template(t *testing.T) {
 			assert.NoError(t, err)
 		} else {
 			assert.Equal(t, "i&#39;m panic<br />i&#39;m panic", string(b))
+		}
+	}
+
+	req = httptest.NewRequest("GET", "/custom", nil)
+	req.Header.Set("Accept", browserAccept)
+	if resp, err := app.Test(req); err != nil {
+		assert.NoError(t, err)
+	} else {
+		assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+		if b, err := ioutil.ReadAll(resp.Body); err != nil {
+			assert.NoError(t, err)
+		} else {
+			assert.Equal(t, "Custom<br />bad thing happens<br />bad thing happens", string(b))
 		}
 	}
 }

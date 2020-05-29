@@ -48,5 +48,5 @@ func (he *httpError) Data() interface{} {
 }
 
 func (he *httpError) Error() string {
-	return fmt.Sprintf("statusCode: %d, message: %s, data: %v", he.statusCode, he.message, he.data)
+	return fmt.Sprintf("statusCode: %d, message: %s", he.statusCode, he.message)
 }
